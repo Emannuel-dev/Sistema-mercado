@@ -37,6 +37,7 @@ function Shell() {
   const inicio = pode('dashboard.ver') ? '/dashboard' : '/clientes';
   return (
     <div className="app">
+      <a href="#conteudo" className="pular">Pular para o conteúdo</a>
       <aside className="menu">
         <div className="marca"><span className="marca-icone"><Store size={16} /></span><div>Mercadinho<small>Fiados e cartões</small></div></div>
         <nav aria-label="Principal">
@@ -59,7 +60,7 @@ function Shell() {
           </div>
         </div>
       </aside>
-      <main className="conteudo">
+      <main className="conteudo" id="conteudo" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Navigate to={inicio} replace />} />
           <Route path="/dashboard" element={<Dashboard />} />

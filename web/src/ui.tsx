@@ -103,7 +103,8 @@ const ROTULOS_SELO: Record<string, string> = {
 };
 
 export const Erro = ({ msg }: { msg: string | null }) => (msg ? <div className="alerta erro" role="alert"><AlertCircle size={16} />{msg}</div> : null);
-export const Selo = ({ s, texto }: { s: string; texto?: string }) => <span className={`selo selo-${s}`}>{texto ?? ROTULOS_SELO[s] ?? s.replace('_', ' ')}</span>;
+const frase = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+export const Selo = ({ s, texto }: { s: string; texto?: string }) => <span className={`selo selo-${s}`}>{frase(texto ?? ROTULOS_SELO[s] ?? s.replace('_', ' '))}</span>;
 
 export const Tabela = ({ children }: { children: ReactNode }) => <div className="tabela-wrap"><div className="tabela-rolagem"><table className="tabela">{children}</table></div></div>;
 
