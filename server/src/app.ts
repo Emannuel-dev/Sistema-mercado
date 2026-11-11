@@ -1,6 +1,10 @@
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt';
 import cors from '@fastify/cors';
+import estaticos from '@fastify/static';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { ErroNegocio } from './lib/erros.js';
 import { authRoutes } from './modules/auth.routes.js';
@@ -35,5 +39,13 @@ export async function criarApp(opts: { logger?: boolean } = {}) {
     await api.register(gestaoRoutes);
     await api.register(syncRoutes);
   }, { prefix: '/api' });
+
+  // Em produção, o próprio servidor entrega o front-end compilado (web/dist).
+  const web = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web', 'dist');
+  if (existsSync(web)) {
+    await app.register(estaticos, { root: web });
+    app.setNotFoundHandler((req, rep) =>
+      req.url.startsWith('/api') ? rep.code(404).send({ codigo: 'NAO_ENCONTRADO', mensagem: 'Rota não encontrada' }) : rep.sendFile('index.html'));
+  }
   return app;
 }
