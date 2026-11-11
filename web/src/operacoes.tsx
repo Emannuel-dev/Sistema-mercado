@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ErroApi } from './api';
 import { registrarOperacao } from './offline';
 import { useAuth } from './auth';
-import { Modal, Campo, Erro, brl, dataBR, lerValor, mensagemErro, TIPOS } from './ui';
+import { Modal, Campo, Erro, brl, dataBR, lerValor, mensagemErro, TIPOS, BotaoFechar } from './ui';
 
 interface ClienteMin { id: string; nome: string; limite?: string; saldo_devedor?: string }
 
@@ -45,7 +45,7 @@ export function CompraFiadoModal({ cliente, aoFechar, aoConcluir }: { cliente: C
     <Modal titulo={`Compra fiada · ${cliente.nome}`} aoFechar={aoFechar}>
       <form onSubmit={enviar} className="form">
         {disponivel !== null && <p className="muted">Limite disponível: <b>{brl(disponivel)}</b></p>}
-        <Campo rotulo="Valor (R$)"><input autoFocus inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" required /></Campo>
+        <Campo rotulo="Valor (R$)"><input className="valor-grande" autoFocus inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" required /></Campo>
         <Campo rotulo="Descrição / itens"><input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="ex.: arroz, feijão" /></Campo>
         <Campo rotulo="Vencimento" dica="Em branco: prazo padrão configurado."><input type="date" value={vencimento} onChange={(e) => setVencimento(e.target.value)} /></Campo>
         {limiteExcedido && pode('fiado.exceder_limite') && (
@@ -55,7 +55,7 @@ export function CompraFiadoModal({ cliente, aoFechar, aoConcluir }: { cliente: C
           </div>
         )}
         <Erro msg={erro} />
-        <div className="acoes"><button type="button" className="btn" onClick={aoFechar}>Cancelar</button>
+        <div className="acoes"><BotaoFechar>Cancelar</BotaoFechar>
           <button className="btn primario" disabled={enviando}>{enviando ? 'Registrando…' : 'Registrar compra'}</button></div>
       </form>
     </Modal>
@@ -112,7 +112,7 @@ export function PagamentoModal({ cliente, lancamentos, aoFechar, aoConcluir }: {
             </ul>
           </details>
         )}
-        <Campo rotulo="Valor recebido (R$)"><input autoFocus inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" required /></Campo>
+        <Campo rotulo="Valor recebido (R$)"><input className="valor-grande" autoFocus inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" required /></Campo>
         <Campo rotulo="Meio de recebimento">
           <select value={meio} onChange={(e) => setMeio(e.target.value)}>
             <option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Cartão de débito</option>
@@ -121,7 +121,7 @@ export function PagamentoModal({ cliente, lancamentos, aoFechar, aoConcluir }: {
         </Campo>
         <Campo rotulo="Observação"><input value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
         <Erro msg={erro} />
-        <div className="acoes"><button type="button" className="btn" onClick={aoFechar}>Cancelar</button>
+        <div className="acoes"><BotaoFechar>Cancelar</BotaoFechar>
           <button className="btn primario" disabled={enviando}>{enviando ? 'Registrando…' : 'Registrar pagamento'}</button></div>
       </form>
     </Modal>

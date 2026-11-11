@@ -12,18 +12,24 @@ import Fiados from './pages/Fiados';
 import Cartoes, { CartaoDetalhe } from './pages/Cartoes';
 import Transacoes, { TransacaoDetalhe } from './pages/Transacoes';
 import { Usuarios, Sincronizacao, Configuracoes } from './pages/Admin';
+import { Toaster } from 'sonner';
+import { ArrowLeftRight, CreditCard, LayoutDashboard, LogOut, NotebookPen, RefreshCw, Settings, Store, UserCog, Users } from 'lucide-react';
+import { iniciais } from './ui';
+import '@fontsource-variable/inter';
 import './styles.css';
 
 function BarraSync() {
   const s = useEstadoSync();
   return (
     <NavLink to="/sincronizacao" className={`status-sync ${s.online ? 'on' : 'off'}`} title="Estado da sincronização">
-      <i />{s.online ? 'Online' : 'Offline'}
-      {s.pendentes > 0 && <b>{s.pendentes} pendente{s.pendentes > 1 ? 's' : ''}</b>}
-      {s.problemas > 0 && <b className="ruim">{s.problemas} p/ revisar</b>}
+      <span className="ponto" /><span className="rotulo">{s.online ? 'Online' : 'Sem conexão'}</span>
+      {s.pendentes > 0 && <span className="contador">{s.pendentes} pendente{s.pendentes > 1 ? 's' : ''}</span>}
+      {s.problemas > 0 && <span className="contador ruim">{s.problemas} p/ revisar</span>}
     </NavLink>
   );
 }
+
+const ICONE = 17;
 
 function Shell() {
   const { usuario, sair, pode } = useAuth();
@@ -32,22 +38,25 @@ function Shell() {
   return (
     <div className="app">
       <aside className="menu">
-        <div className="marca">Mercadinho</div>
-        <nav>
-          {pode('dashboard.ver') && <NavLink to="/dashboard">Dashboard</NavLink>}
-          <NavLink to="/clientes">Clientes</NavLink>
-          <NavLink to="/fiados">Fiados</NavLink>
-          {pode('cartoes.ver') && <NavLink to="/cartoes">Cartões</NavLink>}
-          {pode('transacoes.ver') && <NavLink to="/transacoes">Transações</NavLink>}
-          {pode('usuarios.gerenciar') && <NavLink to="/usuarios">Usuários</NavLink>}
-          <NavLink to="/sincronizacao">Sincronização</NavLink>
-          <NavLink to="/configuracoes">Configurações</NavLink>
+        <div className="marca"><span className="marca-icone"><Store size={16} /></span><div>Mercadinho<small>Fiados e cartões</small></div></div>
+        <nav aria-label="Principal">
+          {pode('dashboard.ver') && <NavLink to="/dashboard"><LayoutDashboard size={ICONE} /><span>Visão geral</span></NavLink>}
+          <NavLink to="/clientes"><Users size={ICONE} /><span>Clientes</span></NavLink>
+          <NavLink to="/fiados"><NotebookPen size={ICONE} /><span>Fiados</span></NavLink>
+          {pode('cartoes.ver') && <NavLink to="/cartoes"><CreditCard size={ICONE} /><span>Cartões</span></NavLink>}
+          {pode('transacoes.ver') && <NavLink to="/transacoes"><ArrowLeftRight size={ICONE} /><span>Transações</span></NavLink>}
+          <div className="menu-secao">Sistema</div>
+          {pode('usuarios.gerenciar') && <NavLink to="/usuarios"><UserCog size={ICONE} /><span>Usuários</span></NavLink>}
+          <NavLink to="/sincronizacao"><RefreshCw size={ICONE} /><span>Sincronização</span></NavLink>
+          <NavLink to="/configuracoes"><Settings size={ICONE} /><span>Configurações</span></NavLink>
         </nav>
         <div className="rodape-menu">
           <BarraSync />
-          <div className="usuario"><b>{usuario?.nome}</b><span>{usuario?.perfil}</span></div>
-          <NavLink to="/senha" className="link pequeno">Trocar senha</NavLink>
-          <button className="btn pequeno" onClick={sair}>Sair</button>
+          <div className="perfil">
+            <NavLink to="/senha" className="avatar" title="Trocar senha">{iniciais(usuario?.nome)}</NavLink>
+            <div className="perfil-info"><b>{usuario?.nome}</b><span>{usuario?.perfil}</span></div>
+            <button className="btn-icone" onClick={sair} aria-label="Sair" title="Sair"><LogOut size={16} /></button>
+          </div>
         </div>
       </aside>
       <main className="conteudo">
@@ -74,12 +83,12 @@ function Shell() {
 
 function App() {
   const { usuario, carregando } = useAuth();
-  if (carregando) return <p className="muted centro">Carregando…</p>;
+  if (carregando) return null;
   if (!usuario) return <Login />;
   if (usuario.trocar_senha) return <TrocarSenha obrigatoria />;
   return <Shell />;
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode><BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter></StrictMode>,
+  <StrictMode><BrowserRouter><AuthProvider><App /><Toaster position="bottom-right" richColors closeButton duration={4000} /></AuthProvider></BrowserRouter></StrictMode>,
 );

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { HandCoins, Plus, ShoppingBasket, WifiOff } from 'lucide-react';
 import { get, qs, SemConexao } from '../api';
 import { useAuth } from '../auth';
 import { buscarClientesOffline, db } from '../offline';
 import { CompraFiadoModal, PagamentoModal } from '../operacoes';
-import { brl, telefoneBR, Selo, Erro, mensagemErro } from '../ui';
+import { brl, telefoneBR, Selo, Erro, mensagemErro, Tabela, Busca, iniciais, avisarResultado } from '../ui';
 import { ClienteForm } from './ClienteForm';
 
 export default function Clientes() {
@@ -16,7 +17,6 @@ export default function Clientes() {
   const [itens, setItens] = useState<any[]>([]);
   const [offline, setOffline] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [novo, setNovo] = useState(false);
   const [compra, setCompra] = useState<any>(null);
   const [pag, setPag] = useState<any>(null);
@@ -37,36 +37,44 @@ export default function Clientes() {
     return () => clearTimeout(t);
   }, [busca, status, situacao, versao]);
 
-  const concluir = (msg: string) => { setCompra(null); setPag(null); setAviso(msg); setVersao((v) => v + 1); };
+  const concluir = (msg: string) => { setCompra(null); setPag(null); avisarResultado(msg); setVersao((v) => v + 1); };
 
   return (
-    <div>
-      <div className="topo-pagina"><h1>Clientes</h1>{pode('clientes.editar') && <button className="btn primario" onClick={() => setNovo(true)}>+ Novo cliente</button>}</div>
-      {aviso && <div className="alerta ok" onClick={() => setAviso(null)}>{aviso}</div>}
-      {offline && <div className="alerta aviso">Sem conexão: mostrando a última cópia local. Compras e pagamentos ficam pendentes até sincronizar.</div>}
+    <div className="pagina">
+      <div className="topo-pagina">
+        <div><h1>Clientes</h1><p className="subtitulo">Busque o cliente para lançar uma compra ou receber um pagamento.</p></div>
+        {pode('clientes.editar') && <button className="btn primario" onClick={() => setNovo(true)}><Plus size={16} />Novo cliente</button>}
+      </div>
+      {offline && <div className="alerta aviso"><WifiOff size={16} />Sem conexão. Mostrando a última cópia salva neste caixa; compras e pagamentos ficam pendentes até a internet voltar.</div>}
       <div className="filtros">
-        <input className="busca" autoFocus placeholder="Buscar por nome, telefone, CPF ou nº do cartão" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <Busca autoFocus valor={busca} aoMudar={setBusca} placeholder="Nome, telefone, CPF ou nº do cartão" />
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="">Todos os status</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option><option value="bloqueado">Bloqueados</option></select>
         <select value={situacao} onChange={(e) => setSituacao(e.target.value)} aria-label="Situação"><option value="">Qualquer situação</option><option value="com_saldo">Com saldo devedor</option><option value="inadimplente">Inadimplentes</option></select>
       </div>
       <Erro msg={erro} />
-      <table className="tabela">
-        <thead><tr><th>Nome</th><th>Telefone</th><th>Status</th><th className="num">Devendo</th><th className="num">Limite</th><th></th></tr></thead>
+      <Tabela>
+        <thead><tr><th>Cliente</th><th>Situação</th><th className="num">Devendo</th><th className="num esconder-mobile">Limite</th><th></th></tr></thead>
         <tbody>
           {itens.map((c) => (
             <tr key={c.id} className="clicavel" onClick={() => !offline && nav(`/clientes/${c.id}`)}>
-              <td>{offline ? c.nome : <Link to={`/clientes/${c.id}`}>{c.nome}</Link>}{Number(c.vencido) > 0 && <span className="selo selo-vencido">vencido</span>}{c.credito_status === 'bloqueada' && <span className="selo selo-bloqueado">crédito bloqueado</span>}</td>
-              <td>{telefoneBR(c.telefone)}</td><td><Selo s={c.status} /></td>
-              <td className="num">{brl(c.saldo_devedor)}</td><td className="num muted">{brl(c.limite)}</td>
+              <td>
+                <div className="nome-cel">
+                  <span className="avatar">{iniciais(c.nome)}</span>
+                  <div>{offline ? <b>{c.nome}</b> : <Link to={`/clientes/${c.id}`}><b>{c.nome}</b></Link>}<span className="sub">{telefoneBR(c.telefone)}</span></div>
+                </div>
+              </td>
+              <td>{c.status !== 'ativo' ? <Selo s={c.status} /> : Number(c.vencido) > 0 ? <Selo s="vencido" texto="em atraso" /> : c.credito_status === 'bloqueada' ? <Selo s="bloqueado" texto="crédito bloqueado" /> : <Selo s="ativo" texto="em dia" />}</td>
+              <td className="num"><span className={Number(c.saldo_devedor) > 0 ? '' : 'sutil'}>{brl(c.saldo_devedor)}</span></td>
+              <td className="num sutil esconder-mobile">{brl(c.limite)}</td>
               <td className="acoes-linha" onClick={(e) => e.stopPropagation()}>
-                {pode('fiado.lancar') && <button className="btn pequeno" disabled={c.status !== 'ativo'} onClick={() => setCompra(c)}>Compra</button>}
-                {pode('fiado.pagamento') && <button className="btn pequeno" disabled={Number(c.saldo_devedor) <= 0 && !offline} onClick={() => setPag(c)}>Pagamento</button>}
+                {pode('fiado.lancar') && <button className="btn pequeno" disabled={c.status !== 'ativo'} onClick={() => setCompra(c)}><ShoppingBasket size={14} />Compra</button>}
+                {pode('fiado.pagamento') && <button className="btn pequeno" disabled={Number(c.saldo_devedor) <= 0 && !offline} onClick={() => setPag(c)}><HandCoins size={14} />Pagamento</button>}
               </td>
             </tr>
           ))}
-          {itens.length === 0 && <tr><td colSpan={6} className="muted centro">Nenhum cliente encontrado.</td></tr>}
+          {itens.length === 0 && <tr><td colSpan={5}><div className="vazio">{busca ? `Nenhum cliente encontrado para "${busca}".` : 'Nenhum cliente cadastrado ainda.'}</div></td></tr>}
         </tbody>
-      </table>
+      </Tabela>
       {novo && <ClienteForm aoFechar={() => setNovo(false)} aoSalvar={(c) => { setNovo(false); nav(`/clientes/${c.id}`); }} />}
       {compra && <CompraFiadoModal cliente={compra} aoFechar={() => setCompra(null)} aoConcluir={concluir} />}
       {pag && <PagamentoModal cliente={pag} aoFechar={() => setPag(null)} aoConcluir={concluir} />}

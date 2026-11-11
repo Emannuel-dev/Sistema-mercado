@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { post, put, ErroApi } from '../api';
-import { Modal, Campo, Erro, mensagemErro, lerValor } from '../ui';
+import { Modal, Campo, Erro, mensagemErro, lerValor, BotaoFechar } from '../ui';
 
 const CAMPOS = ['nome', 'telefone', 'cpf', 'data_nascimento', 'endereco', 'bairro', 'complemento', 'referencia', 'observacoes'] as const;
 
@@ -45,7 +45,7 @@ export function ClienteForm({ cliente, aoFechar, aoSalvar }: { cliente?: any; ao
             <div className="alerta aviso">Já existe cliente com este telefone: <b>{duplicados.map((d) => d.nome).join(', ')}</b>.
               <div className="acoes"><button type="button" className="btn" onClick={() => salvar(true)}>É outra pessoa, cadastrar mesmo assim</button></div></div>
           )}
-          <div className="acoes"><button type="button" className="btn" onClick={aoFechar}>Cancelar</button><button className="btn primario">Salvar</button></div>
+          <div className="acoes"><BotaoFechar>Cancelar</BotaoFechar><button className="btn primario">Salvar</button></div>
         </div>
       </form>
     </Modal>

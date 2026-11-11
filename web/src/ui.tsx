@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Dialog } from '@base-ui/react/dialog';
+import { AlertCircle, Search, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { ErroApi, SemConexao } from './api';
 
 export const brl = (v: string | number | null | undefined) =>
@@ -49,25 +52,64 @@ export function useCarregar<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   return { dados, erro, carregando, recarregar };
 }
 
+/**
+ * Diálogo acessível (base-ui): foco preso, Esc fecha, animação curta de entrada
+ * e saída mais rápida. Os botões "Cancelar" usam <BotaoFechar> para animar a saída.
+ */
 export function Modal({ titulo, aoFechar, children }: { titulo: string; aoFechar: () => void; children: ReactNode }) {
+  const [aberto, setAberto] = useState(true);
+  return (
+    <Dialog.Root open={aberto} onOpenChange={(o) => { if (!o) setAberto(false); }} onOpenChangeComplete={(o) => { if (!o) aoFechar(); }}>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="dlg-fundo" />
+        <Dialog.Popup className="dlg">
+          <div className="dlg-topo">
+            <Dialog.Title render={<h2 />}>{titulo}</Dialog.Title>
+            <Dialog.Close className="btn-icone" aria-label="Fechar"><X size={18} /></Dialog.Close>
+          </div>
+          {children}
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+export const BotaoFechar = ({ children }: { children: ReactNode }) => <Dialog.Close className="btn">{children}</Dialog.Close>;
+
+/** Campo de busca com atalho "/" (sem animação: é uma ação de teclado frequente). */
+export function Busca({ valor, aoMudar, placeholder, autoFocus }: { valor: string; aoMudar: (v: string) => void; placeholder: string; autoFocus?: boolean }) {
+  const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    const f = (e: KeyboardEvent) => e.key === 'Escape' && aoFechar();
+    const f = (e: KeyboardEvent) => {
+      const alvo = e.target as HTMLElement;
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(alvo.tagName)) { e.preventDefault(); ref.current?.focus(); }
+    };
     window.addEventListener('keydown', f);
     return () => window.removeEventListener('keydown', f);
-  }, [aoFechar]);
+  }, []);
   return (
-    <div className="modal-fundo" onMouseDown={(e) => e.target === e.currentTarget && aoFechar()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={titulo}>
-        <div className="modal-topo"><h2>{titulo}</h2><button className="btn-icone" onClick={aoFechar} aria-label="Fechar">×</button></div>
-        {children}
-      </div>
+    <div className="busca-wrap">
+      <Search size={16} />
+      <input ref={ref} autoFocus={autoFocus} value={valor} onChange={(e) => aoMudar(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
+      {!valor && <kbd className="esconder-mobile">/</kbd>}
     </div>
   );
 }
 
-export const Erro = ({ msg }: { msg: string | null }) => (msg ? <div className="alerta erro" role="alert">{msg}</div> : null);
-export const Selo = ({ s }: { s: string }) => <span className={`selo selo-${s}`}>{s.replace('_', ' ')}</span>;
+export const iniciais = (nome?: string) => (nome ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+
+const ROTULOS_SELO: Record<string, string> = {
+  requer_revisao: 'requer revisão', ativa: 'liberado', bloqueada: 'bloqueado', confirmada: 'confirmada',
+};
+
+export const Erro = ({ msg }: { msg: string | null }) => (msg ? <div className="alerta erro" role="alert"><AlertCircle size={16} />{msg}</div> : null);
+export const Selo = ({ s, texto }: { s: string; texto?: string }) => <span className={`selo selo-${s}`}>{texto ?? ROTULOS_SELO[s] ?? s.replace('_', ' ')}</span>;
+
+export const Tabela = ({ children }: { children: ReactNode }) => <div className="tabela-wrap"><div className="tabela-rolagem"><table className="tabela">{children}</table></div></div>;
 
 export function Campo({ rotulo, children, dica }: { rotulo: string; children: ReactNode; dica?: string }) {
   return <label className="campo"><span>{rotulo}</span>{children}{dica && <small>{dica}</small>}</label>;
 }
+
+/** Resultado de operação: pendente offline vira aviso, o resto vira sucesso. */
+export const avisarResultado = (msg: string) => (msg.startsWith('Sem conexão') ? toast.warning(msg) : toast.success(msg));

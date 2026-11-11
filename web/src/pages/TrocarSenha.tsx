@@ -19,7 +19,7 @@ export default function TrocarSenha({ obrigatoria = false }: { obrigatoria?: boo
   };
 
   return (
-    <div className={obrigatoria ? 'login' : ''}>
+    <div className={obrigatoria ? 'login' : 'pagina'}>
       <form className={`form ${obrigatoria ? 'cartao-login' : 'painel estreito'}`} onSubmit={enviar}>
         <h2>Trocar senha</h2>
         {obrigatoria && <p className="muted">Por segurança, defina uma nova senha antes de continuar.</p>}
@@ -27,7 +27,7 @@ export default function TrocarSenha({ obrigatoria = false }: { obrigatoria?: boo
         <Campo rotulo="Nova senha" dica="Mínimo de 8 caracteres."><input type="password" value={nova} onChange={(e) => setNova(e.target.value)} minLength={8} required /></Campo>
         <Campo rotulo="Confirme a nova senha"><input type="password" value={conf} onChange={(e) => setConf(e.target.value)} required /></Campo>
         <Erro msg={erro} />
-        {ok && <div className="alerta ok">Senha alterada.</div>}
+        {ok && <div className="alerta ok">Senha alterada com sucesso.</div>}
         <div className="acoes">{obrigatoria && <button type="button" className="btn" onClick={sair}>Sair</button>}<button className="btn primario">Salvar</button></div>
       </form>
     </div>
