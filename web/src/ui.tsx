@@ -31,7 +31,7 @@ export const TIPOS: Record<string, string> = {
 };
 
 export const mensagemErro = (e: unknown) =>
-  e instanceof SemConexao ? 'Sem conexão com o servidor.' : e instanceof ErroApi ? e.message : 'Erro inesperado.';
+  e instanceof SemConexao ? e.message : e instanceof ErroApi ? e.message : 'Erro inesperado.';
 
 /** Converte "12,50" ou "12.50" em número; NaN se inválido. */
 export const lerValor = (s: string) => {

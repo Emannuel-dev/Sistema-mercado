@@ -25,10 +25,14 @@ createdb -O mercadinho mercadinho_test   # só para os testes
 npm install
 cp server/.env.example server/.env       # troque o JWT_SECRET
 
-# 3. Subir (dois terminais)
-npm run dev:server    # API em http://localhost:3333 (aplica migrações e cria o admin)
-npm run dev:web       # tela em http://localhost:5173
+# 3. Subir API + tela juntas (aplica migrações e cria o admin)
+npm run dev           # abra http://localhost:5173
+# ou, em dois terminais: npm run dev:server  e  npm run dev:web
 ```
+
+> **Deu "A API não está respondendo" ou "Erro 500" no login?** A tela está aberta mas a API
+> não subiu. Olhe o terminal da API: normalmente é o PostgreSQL desligado ou o `DATABASE_URL`
+> do `server/.env` com usuário/senha/banco errados. A mensagem de erro diz qual dos casos é.
 
 Primeiro acesso: usuário **admin**, senha **admin123**. O sistema obriga a troca da senha no
 primeiro login. Para usar outra senha inicial, defina `ADMIN_SENHA` antes de subir o servidor.

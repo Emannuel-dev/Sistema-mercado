@@ -1,8 +1,12 @@
 {
   "name": "mercadinho",
   "private": true,
-  "workspaces": ["server", "web"],
+  "workspaces": [
+    "server",
+    "web"
+  ],
   "scripts": {
+    "dev": "node scripts/dev.mjs",
     "dev:server": "npm run dev -w server",
     "dev:web": "npm run dev -w web",
     "migrate": "npm run migrate -w server",

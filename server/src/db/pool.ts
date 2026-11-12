@@ -6,6 +6,10 @@ pg.types.setTypeParser(1082, (v) => v);
 
 export const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 10 });
 
+// Se o PostgreSQL reiniciar ou cair, conexões ociosas emitem 'error'. Sem este handler o Node
+// derruba a API inteira; com ele, a API continua no ar e reconecta quando o banco voltar.
+pool.on('error', (e) => console.error('[mercadinho] conexão com o PostgreSQL perdida:', e.message));
+
 export type Db = pg.PoolClient;
 
 /** Executa fn dentro de uma transação SQL. Faz rollback em qualquer erro. */

@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { criarApp } from './app.js';
+import { criarApp, problemaBanco } from './app.js';
 import { migrar } from './db/migrate.js';
 import { seedAdmin } from './db/seed.js';
 import { processarViradas } from './modules/cartoes.service.js';
@@ -23,4 +23,9 @@ async function main() {
   setInterval(rodar, config.viradaIntervaloMs);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  const banco = problemaBanco(e);
+  console.error(banco ? `\n[mercadinho] Não foi possível iniciar a API: ${banco}\n` : e);
+  if (e?.code === 'EADDRINUSE') console.error(`\n[mercadinho] A porta ${config.port} já está em uso: a API já está rodando em outro terminal?\n`);
+  process.exit(1);
+});

@@ -7,7 +7,7 @@ export class ErroApi extends Error {
 }
 /** Falha de rede (sem conexão com o servidor). */
 export class SemConexao extends Error {
-  constructor() { super('Sem conexão com o servidor'); }
+  constructor(mensagem = 'Sem conexão com o servidor.') { super(mensagem); }
 }
 
 const CHAVE_TOKEN = 'mercadinho.token';
@@ -40,8 +40,8 @@ export async function api<T = any>(metodo: string, caminho: string, corpo?: unkn
   } catch {
     throw new SemConexao();
   }
-  if (r.status === 502 || r.status === 503 || r.status === 504) throw new SemConexao();
-  const dados = r.headers.get('content-type')?.includes('json') ? await r.json() : null;
+  const dados = r.headers.get('content-type')?.includes('json') ? await r.json().catch(() => null) : null;
+  if (r.status === 502 || r.status === 503 || r.status === 504) throw new SemConexao(dados?.mensagem);
   if (!r.ok) {
     if (r.status === 401 && caminho !== '/auth/login') aoExpirar();
     throw new ErroApi(r.status, dados?.codigo ?? 'ERRO', dados?.mensagem ?? `Erro ${r.status}`, dados?.detalhes);
